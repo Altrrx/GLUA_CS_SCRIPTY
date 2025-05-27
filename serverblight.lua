@@ -1,33 +1,49 @@
-if SERVER then return end -- Server shouldnt run this, big no-no, if the server (somehow) dies out of bounds it might crash.
+if SERVER then return end -- client only
 
 local blightEnabled = false
 local blightChase = false
 local blightModel = nil
 local aprehended = false
+local chaseSound = nil
 
--- sv_blight 1 means crashes when out of bounds (If any of the axises more than 10000)
--- On the other hand sv_blight 0 means no crash
-
--- sv_blight_chase 1 enables the chase
--- sv_blight_chase 0 disables the chase
+-- toggle crash on out of bounds
 concommand.Add("sv_blight", function(_, _, args)
     blightEnabled = args[1] == "1"
     chat.AddText(Color(255, 0, 0), "[BLIGHT] enabled: ", tostring(blightEnabled))
     aprehended = false
 end)
 
+-- toggle chase with deforming playermodel + sound
 concommand.Add("sv_blight_chase", function(_, _, args)
     blightChase = args[1] == "1"
     chat.AddText(Color(255, 50, 255), "[BLIGHT CHASE] enabled: ", tostring(blightChase))
 
     if blightChase then
         if IsValid(blightModel) then blightModel:Remove() end
+        if chaseSound then chaseSound:Stop() chaseSound = nil end
+
+        local ply = LocalPlayer()
+        if not IsValid(ply) then return end
+
         blightModel = ClientsideModel("models/player/zombie_fast.mdl", RENDERGROUP_OPAQUE)
         blightModel:SetNoDraw(false)
-        blightModel:SetPos(LocalPlayer():GetPos() + Vector(0, 0, 100))
         blightModel:SetModelScale(2)
-    elseif IsValid(blightModel) then
-        blightModel:Remove()
+
+        -- Spawn 500 units away horizontally + 100 up
+        local offsetDir = VectorRand()
+        offsetDir.z = 0
+        offsetDir:Normalize()
+        local spawnPos = ply:GetPos() + offsetDir * 500 + Vector(0, 0, 100)
+        blightModel:SetPos(spawnPos)
+
+        -- Play horrible looping sound (replace with any sound path you want)
+        chaseSound = CreateSound(blightModel, "npc/zombie/zombie_pain3.wav")
+        chaseSound:Play()
+        chaseSound:SetSoundLevel(80)
+        chaseSound:ChangePitch(60)
+    else
+        if IsValid(blightModel) then blightModel:Remove() end
+        if chaseSound then chaseSound:Stop() chaseSound = nil end
         aprehended = false
     end
 end)
@@ -88,18 +104,33 @@ hook.Add("PostDrawOpaqueRenderables", "BlightChaseEffect", function()
         local ply = LocalPlayer()
         local ppos = ply:GetPos()
         local epos = blightModel:GetPos()
-        local dir = (ppos - epos):GetNormalized()
 
-        -- move towards player with glitchy random motion
-        blightModel:SetPos(epos + dir * 10 + VectorRand() * 5)
+        -- Horizontal direction only
+        local dir = (ppos - epos)
+        dir.z = 0
+        dir:Normalize()
 
-        -- violently deform bones
-        for i = 0, blightModel:GetBoneCount() - 1 do
-            blightModel:ManipulateBoneAngles(i, AngleRand() * 30)
+        -- Move slowly towards player with gentle jitter
+        local newPos = epos + dir * 5 + VectorRand() * 1.5
+        blightModel:SetPos(newPos)
+
+        -- Bone deformation
+        local boneCount = blightModel:GetBoneCount() - 1
+
+        for i = 0, boneCount do
+            if blightModel:GetBoneName(i):lower():find("finger") then
+                -- wild finger stretch + jiggle
+                local angle = Angle(math.sin(CurTime()*10 + i)*60, math.cos(CurTime()*12 + i)*60, math.sin(CurTime()*14 + i)*60)
+                blightModel:ManipulateBoneAngles(i, angle)
+            else
+                -- subtle random jitter on other bones
+                local angle = AngleRand() * 5
+                blightModel:ManipulateBoneAngles(i, angle)
+            end
         end
 
-        -- hit detection: simple bounding radius check
-        if not aprehended and ppos:Distance(epos) < 100 then
+        -- Hit detection radius 100 units
+        if not aprehended and ppos:Distance(newPos) < 100 then
             triggerCrash()
         end
     end
