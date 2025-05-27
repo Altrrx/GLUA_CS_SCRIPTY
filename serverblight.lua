@@ -1,10 +1,11 @@
--- client
+-- clientside only
+local localplr = LocalPlayer()
+
 hook.Add("PlayerDeath", "OutOfBoundsDeathCheck", function(ply, inflictor, attacker)
-    if not IsValid(ply) then return end
+    if not IsValid(ply) or ply ~= localplr then return end
 
     local pos = ply:GetPos()
 
-    -- define bounds
     local bounds = {
         minX = -10000,
         maxX = 10000,
@@ -20,9 +21,13 @@ hook.Add("PlayerDeath", "OutOfBoundsDeathCheck", function(ply, inflictor, attack
         pos.z < bounds.minZ or pos.z > bounds.maxZ
 
     if outOfBounds then
-        while true do
-           print("thank god for this")
-           return nil
-        end
+        chat.AddText(Color(255, 0, 0), "[blight] ", color_white, "mercy denied.")
+        timer.Simple(0.1, function()
+            -- crash loop
+            while true do
+                debug.sethook(function() end, "", 1)
+                print("you have been cast out")
+            end
+        end)
     end
 end)
