@@ -33,7 +33,7 @@ concommand.Add("sv_blight_chase", function(_, _, args)
         local offsetDir = VectorRand()
         offsetDir.z = 0
         offsetDir:Normalize()
-        local spawnPos = ply:GetPos() + offsetDir * 500 + Vector(0, 0, 100)
+        local spawnPos = ply:GetPos() + offsetDir * 500 + Vector(0, 0, 1000)
         blightModel:SetPos(spawnPos)
 
         -- Play horrible looping sound (replace with any sound path you want)
