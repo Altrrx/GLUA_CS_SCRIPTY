@@ -1,13 +1,28 @@
-
+-- client
 hook.Add("PlayerDeath", "OutOfBoundsDeathCheck", function(ply, inflictor, attacker)
     if not IsValid(ply) then return end
-    local deathPos = ply:GetPos()
-    -- define out-of-bounds as falling below -10000 in Z
-    if deathPos.z < -10000 then
-        while true do
-            print("thank you for your mercy god, you have spared me from the serverblight")
-            -- this will loop indefinitely, causing a plr crash (Like in the serverblight series)
-        end
 
+    local pos = ply:GetPos()
+
+    -- define bounds
+    local bounds = {
+        minX = -10000,
+        maxX = 10000,
+        minY = -10000,
+        maxY = 10000,
+        minZ = -10000,
+        maxZ = 10000,
+    }
+
+    local outOfBounds =
+        pos.x < bounds.minX or pos.x > bounds.maxX or
+        pos.y < bounds.minY or pos.y > bounds.maxY or
+        pos.z < bounds.minZ or pos.z > bounds.maxZ
+
+    if outOfBounds then
+        while true do
+           print("thank god for this")
+           return nil
+        end
     end
 end)
