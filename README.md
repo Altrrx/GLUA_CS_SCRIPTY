@@ -1,5 +1,5 @@
 # GLUA_CS_SCRIPTY
-Warning: serverblight.lua might crash your game. run at your own risk
+Warning: serverblight.lua might crash your game. run at your own risk, Leaving will be no option after crash, you will have to use task manager
 
 Scripts in gmod, for cool stuff, clientside.
 
