@@ -48,8 +48,8 @@ if SERVER then
 
     hook.Add("OnPhysgunFreeze", "Hint_Freeze", function(_, _, _, ply)
         SendHint(ply, "froze_something", ply:SteamID64() == momSteamID
-            and "La congelaste, haz clic derecho para descongelar."
-            or "you froze it! right click to unfreeze.")
+            and "La congelaste, agarralo sin hacer clic derecho para descongelarlo."
+            or "you froze it! grab it but dont rightclick to unfreeze in")
     end)
 
     hook.Add("CanTool", "Hint_Toolgun", function(ply)
